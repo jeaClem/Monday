@@ -1,0 +1,115 @@
+import React, {Component} from 'react';
+import {View, StyleSheet, Text, Dimensions, Button} from 'react-native';
+import { EMPTY, CROSS, ROUND, haveWinner } from '../consts/values';
+import {Link} from 'react-native-router;'
+import Cell from './Cell';
+
+const {width, height} = Dimensions.get("window");
+let minSize;
+if (width < height) {
+  minSize = width * .9;
+} else {
+  minSize = height * .9;
+}
+
+
+export default class Board extends Component {
+    constructor (props) {
+      super();
+      this.state = {
+        game: [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
+        winner: false,
+        player: ROUND,
+        roundPoints: 0,
+        crossPoints: 0
+    }
+}
+
+onTouch (index) {
+  let {game, winner} = this.state;
+  if (!winner) {
+    game[index] = this.state.player;
+    this.setState({game: game});
+    this.changeTour();
+  }
+}
+
+changeTour () {
+  let {player, game, roundPoints, crossPoints} = this.state;
+  let winner = haveWinner(game);
+  if (winner) {
+    this.setState({
+      winner: (winner === CROSS) ? 'Félicitation aux croix' : 'Les ronds remportent la victoire',
+      roundPoints: (winner === ROUND) ? roundPoints+1 : roundPoints,
+      crossPoints: (winner === CROSS) ? crossPoints+1 : crossPoints
+    });
+  } else if (game.indexOf(EMPTY) === -1) {
+    this.setState({
+      winner: 'égalité !'
+    });
+  } else {
+    this.setState({
+      player: (player === ROUND) ? CROSS : ROUND
+    });
+  } 
+}
+
+restart () {
+  let {player} = this.state; 
+  this.setState({
+    game: [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
+    winner: false,
+    player: (player === ROUND) ? CROSS : ROUND
+  }, () =>  {
+   if (palyer === ROUND) {
+    let bot = new Bot ([EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY]);
+    let botChoice = bot.play();
+    let t = this;
+    setTimeout(() => {
+      t.onTouch(botChoice, true);
+    }, 1000);
+  } 
+ });
+}
+
+render () {
+  let {pathName} = (this.props.location)
+  return (
+    <View style={styles.main}>
+      <view>
+<Link to="/" style={(pathName === '/') ? {backgroundColor: 'red'} : {backgroundColor: '#aff'}} underlayColor="#f0f4f7">
+    <Text>Solo</Text>
+</Link>
+<Link to="/multi" style={(pathName === '/multi') ? {backgroundColor: 'red'} : {backgroundColor: '#aff'}} underlayColor="#f0f4f7">
+    <Text>Multi</Text>
+</Link>
+</view>
+      <View style={styles.board}>
+        {
+          this.state.game.map(
+            (i, k) => 
+              <Cell style={styles.cell} state={i} key={k} onTouch={() => {this.onTouch(k)}} />
+          )
+        }
+      </View>
+      {
+        (this.state.winner) &&
+          <View style={styles.main}>
+            <Text style={styles.victoryText}>{this.state.winner}</Text>
+            <Button color='#92c45c' onPress={this.restart.bind(this)} title='Rejouer'/>
+          </View>
+      }
+      <View style={styles.pointBox}>
+        <View style={[styles.main, styles.roundPoint]}>
+          <Text style={styles.pointText}>Ronds</Text>
+          <Text style={styles.pointText}>{this.state.roundPoints}</Text>
+        </View>
+        <View style={[styles.main, styles.crossPoint]}>
+          <Text style={styles.pointText}>Croix</Text>
+          <Text style={styles.pointText}>{this.state.crossPoints}</Text>
+        </View>
+      </View>
+    </View>
+  )
+}
+}
